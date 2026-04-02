@@ -38,6 +38,7 @@ class Habit(models.Model):
         blank=True,
         related_name='dependent_habits',
         verbose_name="Связанная привычка",
+        limit_choices_to={'is_pleasant': True},
         help_text="Сюда можно добавить только приятную привычку"
     )
     periodicity = models.PositiveIntegerField(
