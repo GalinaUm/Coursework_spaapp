@@ -17,17 +17,14 @@ class HabitViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        # Если пользователь хочет редактировать или удалить (action: update, destroy)
         if self.action in ["update", "partial_update", "destroy"]:
             self.permission_classes = [IsAuthenticated, IsOwner]
         else:
-            # Для просмотра списка или создания достаточно быть авторизованным
             self.permission_classes = [IsAuthenticated]
         return super().get_permissions()
 
     def get_queryset(self):
         """Список привычек текущего пользователя (для CRUD)"""
-        # Если это не запрос к списку публичных привычек, фильтруем по владельцу
         if self.action == "public_list":
             return Habit.objects.filter(is_public=True)
         return Habit.objects.filter(habit_creator=self.request.user)

@@ -7,5 +7,3 @@ def send_telegram_message(chat_id, text):
     url = f"https://telegram.org{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text}
     requests.post(url, data=payload)
-
-

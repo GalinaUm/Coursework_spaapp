@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from users.models import User
 
 
@@ -9,11 +10,7 @@ class UserTestCase(APITestCase):
     def test_user_registration(self):
         """Тест регистрации и хеширования пароля"""
         self.client.force_authenticate(user=None)
-        data = {
-            "email": "new@test.ru",
-            "password": "mypassword123",
-            "city": "Moscow"
-        }
+        data = {"email": "new@test.ru", "password": "mypassword123", "city": "Moscow"}
         response = self.client.post(reverse("users:user_create"), data=data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -39,7 +36,9 @@ class UserTestCase(APITestCase):
 
     def test_user_list_allowed_for_staff(self):
         """Тест: админ видит список юзеров"""
-        admin = User.objects.create_user(email="staff@test.ru", password="123", is_staff=True)
+        admin = User.objects.create_user(
+            email="staff@test.ru", password="123", is_staff=True
+        )
         self.client.force_authenticate(user=admin)
 
         response = self.client.get(reverse("users:users_list"))
