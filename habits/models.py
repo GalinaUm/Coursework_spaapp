@@ -1,45 +1,44 @@
 from django.conf import settings
-from django.db import models
 from django.core.exceptions import ValidationError
+from django.db import models
 
 
 class Habit(models.Model):
     habit_creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='habits',
+        related_name="habits",
     )
     habit = models.TextField(
         max_length=255,
         null=True,
         blank=True,
         verbose_name="Полезная привычка",
-        help_text = "Укажите полезную привычку"
+        help_text="Укажите полезную привычку",
     )
     place = models.CharField(
         max_length=100,
         blank=True,
-        default='',
+        default="",
         verbose_name="Место выполнения",
         help_text="Укажите место, где вам пригодится эта привычка",
     )
     time = models.TimeField(
         verbose_name="Время выполнения",
-        help_text="Укажите время, когда нужно выполнить привычку (например, 08:00)"
+        help_text="Укажите время, когда нужно выполнить привычку (например, 08:00)",
     )
     is_pleasant = models.BooleanField(
-        default=False,
-        verbose_name="Признак приятной привычки"
+        default=False, verbose_name="Признак приятной привычки"
     )
     related_habit = models.ForeignKey(
-        'self',
+        "self",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='dependent_habits',
+        related_name="dependent_habits",
         verbose_name="Связанная привычка",
-        limit_choices_to={'is_pleasant': True},
-        help_text="Сюда можно добавить только приятную привычку"
+        limit_choices_to={"is_pleasant": True},
+        help_text="Сюда можно добавить только приятную привычку",
     )
     periodicity = models.PositiveIntegerField(
         default=1,
@@ -51,17 +50,17 @@ class Habit(models.Model):
         null=True,
         blank=True,
         verbose_name="Вознаграждение",
-        help_text="Чем вы себя порадуете после выполнения (если нет связанной приятной привычки)"
+        help_text="Чем вы себя порадуете после выполнения (если нет связанной приятной привычки)",
     )
     duration = models.PositiveIntegerField(
         default=120,
         verbose_name="Время на выполнение (в секундах)",
-        help_text="Не должно превышать 120 секунд"
+        help_text="Не должно превышать 120 секунд",
     )
     is_public = models.BooleanField(
         default=False,
         verbose_name="Публичная привычка",
-        help_text="Видна ли привычка другим пользователям"
+        help_text="Видна ли привычка другим пользователям",
     )
 
     def __str__(self):
@@ -78,11 +77,13 @@ class Habit(models.Model):
             )
         if self.duration and self.duration > 120:
             raise ValidationError(
-                {'duration': "Время выполнения должно быть не больше 120 секунд."}
+                {"duration": "Время выполнения должно быть не больше 120 секунд."}
             )
         if self.related_habit and not self.related_habit.is_pleasant:
             raise ValidationError(
-                {'related_habit': "В связанные привычки можно добавлять только приятные привычки."}
+                {
+                    "related_habit": "В связанные привычки можно добавлять только приятные привычки."
+                }
             )
         if self.is_pleasant:
             if self.reward or self.related_habit:
@@ -91,7 +92,7 @@ class Habit(models.Model):
                 )
         if self.periodicity and self.periodicity > 7:
             raise ValidationError(
-                {'periodicity': "Нельзя выполнять привычку реже, чем 1 раз в 7 дней."}
+                {"periodicity": "Нельзя выполнять привычку реже, чем 1 раз в 7 дней."}
             )
 
     def save(self, *args, **kwargs):

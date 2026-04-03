@@ -1,12 +1,13 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from users.permissions import IsOwner
 
 from .models import Habit
 from .serializers import HabitSerializer
-from .paginators import HabitPagination
-from users.permissions import IsOwner
+
 
 class HabitViewSet(viewsets.ModelViewSet):
     serializer_class = HabitSerializer
@@ -14,7 +15,7 @@ class HabitViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         # Если пользователь хочет редактировать или удалить (action: update, destroy)
-        if self.action in ['update', 'partial_update', 'destroy']:
+        if self.action in ["update", "partial_update", "destroy"]:
             self.permission_classes = [IsAuthenticated, IsOwner]
         else:
             # Для просмотра списка или создания достаточно быть авторизованным
@@ -24,7 +25,7 @@ class HabitViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Список привычек текущего пользователя (для CRUD)"""
         # Если это не запрос к списку публичных привычек, фильтруем по владельцу
-        if self.action == 'public_list':
+        if self.action == "public_list":
             return Habit.objects.filter(is_public=True)
         return Habit.objects.filter(habit_creator=self.request.user)
 
@@ -32,7 +33,7 @@ class HabitViewSet(viewsets.ModelViewSet):
         """Привязываем новую привычку к текущему пользователю"""
         serializer.save(habit_creator=self.request.user)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def public_list(self, request):
         """Отдельный эндпоинт для публичных привычек: /habits/public_list/"""
         public_habits = Habit.objects.filter(is_public=True)

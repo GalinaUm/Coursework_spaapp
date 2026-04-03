@@ -1,13 +1,16 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+
 
 class User(AbstractUser):
     username = None
     email = models.EmailField(
-        unique=True, verbose_name="Почта", help_text="Укажите почту",
+        unique=True,
+        verbose_name="Почта",
+        help_text="Укажите почту",
         error_messages={
-            'unique': "Пользователь с такой почтой уже существует.",
-        }
+            "unique": "Пользователь с такой почтой уже существует.",
+        },
     )
     phone = models.CharField(
         max_length=35,
@@ -36,7 +39,7 @@ class User(AbstractUser):
         null=True,
         blank=True,
         verbose_name="Telegram Chat ID",
-        help_text="ID чата в Telegram для отправки уведомлений"
+        help_text="ID чата в Telegram для отправки уведомлений",
     )
 
     USERNAME_FIELD = "email"
