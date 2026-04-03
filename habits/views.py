@@ -6,11 +6,14 @@ from rest_framework.response import Response
 from users.permissions import IsOwner
 
 from .models import Habit
+from .paginators import HabitPagination
 from .serializers import HabitSerializer
 
 
 class HabitViewSet(viewsets.ModelViewSet):
+    queryset = Habit.objects.all()
     serializer_class = HabitSerializer
+    pagination_class = HabitPagination
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):

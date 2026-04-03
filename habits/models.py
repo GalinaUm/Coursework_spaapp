@@ -69,6 +69,7 @@ class Habit(models.Model):
     class Meta:
         verbose_name = "Привычка"
         verbose_name_plural = "Привычки"
+        ordering = ['-id']
 
     def clean(self):
         if self.related_habit and self.reward:
