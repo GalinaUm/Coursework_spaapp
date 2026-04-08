@@ -15,4 +15,4 @@ def check_habits_and_notify():
     for habit in habits_to_remind:
         message = f"Напоминание: {habit.habit} в {habit.place}!"
         if habit.habit_creator.telegram_id:  # Если у юзера заполнен ID
-            send_telegram_message(habit.habit_creator.id, message)
+            send_telegram_message(habit.habit_creator.telegram_id, message)
