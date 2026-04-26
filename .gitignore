@@ -16,3 +16,13 @@ venv/
 .venv/
 env/
 .env
+
+
+.venv
+venv
+.idea
+*.pyc
+.coverage
+htmlcov/
+postgres_data/
+redis_data/

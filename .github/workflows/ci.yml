@@ -1,0 +1,136 @@
+name: Django CI/CD
+
+on:
+  push:
+    branches:
+      - develop
+      - feature/drf_homework
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: |
+          pip install poetry
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction --no-root
+
+      - name: Run Flake8
+        run: |
+          poetry run flake8 .
+
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      SECRET_KEY: test-secret-key
+      DEBUG: "True"
+      NAME: test_db
+      USER: postgres
+      PASSWORD: postgres
+      HOST: localhost
+      PORT: 5432
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d test_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: |
+          pip install poetry
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction --no-root
+
+      - name: Run migrations
+        run: |
+          poetry run python manage.py migrate
+
+      - name: Run tests
+        run: |
+          poetry run python manage.py test
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/drf-homework:${{ github.sha }} .
+          docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/drf-homework:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/drf-homework:latest
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/drf-homework:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/drf-homework:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: always() && needs.build.result == 'success'
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            script: |
+              cd ${{ secrets.DEPLOY_DIR }}
+              git pull origin develop
+              docker compose down
+              docker compose up -d --build
+              docker image prune -f
