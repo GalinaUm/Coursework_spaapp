@@ -132,7 +132,7 @@ def test_celery_task_sends_message(self, mock_send):
 
     now = timezone.now().time().replace(second=0, microsecond=0)
 
-    habit = Habit.objects.create(
+    Habit.objects.create(
         habit_creator=self.user, habit="Тестовая задача", time=now, place="Офис"
     )
 
